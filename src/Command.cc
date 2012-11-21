@@ -103,6 +103,10 @@ namespace
       //_t( RUG_INFO_REQUIREMENTS_e )| "info-obsoletes"	| "io";
       _t( RUG_PATCH_SEARCH_e )	| "patch-search" | "pse";
       _t( RUG_PING_e )		| "ping";
+
+      _t( LIST_LANG_SUPPORT_e ) | "list-language-support" | "langs";
+      _t( ADD_LANG_SUPPORT_e ) | "add-language-support" | "alangs";
+      _t( REMOVE_LANG_SUPPORT_e ) | "remove-language-support" | "rlangs";
 #undef _t
     }
     return _table;
@@ -181,6 +185,9 @@ DEF_ZYPPER_COMMAND( RUG_MOUNT );
 //DEF_ZYPPER_COMMAND( RUG_INFO_REQUIREMENTS );
 DEF_ZYPPER_COMMAND( RUG_PATCH_SEARCH );
 DEF_ZYPPER_COMMAND( RUG_PING );
+DEF_ZYPPER_COMMAND( LIST_LANG_SUPPORT );
+DEF_ZYPPER_COMMAND( ADD_LANG_SUPPORT );
+DEF_ZYPPER_COMMAND( REMOVE_LANG_SUPPORT );
 
 #undef DEF_ZYPPER_COMMAND
 ///////////////////////////////////////////////////////////////////
