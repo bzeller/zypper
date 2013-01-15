@@ -5902,6 +5902,8 @@ void Zypper::doCommand()
       addLocales( *this, _arguments );
     }
 
+    God->commit( ZYppCommitPolicy() );
+     
     break;
   }
 
@@ -5927,6 +5929,8 @@ void Zypper::doCommand()
       removeLocales( *this, _arguments );
     }
 
+    God->commit( ZYppCommitPolicy() );
+    
     break;
   }
 
