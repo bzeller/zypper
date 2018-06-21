@@ -553,6 +553,14 @@ namespace
     CommandHelpFormater & synopsis( const str::Format & text_r )
     { return synopsis( boost::string_ref(text_r.str()) ); }
 
+    /** Multiline text block
+     * \code
+     * "<multiline text_r>"
+     * \endcode
+     */
+    CommandHelpFormater & multiLineText( const std::string &text_r )
+    { _mww.writePar( text_r ); return *this; }
+
 
     /** Description block with leading gap
      * \code
@@ -561,7 +569,7 @@ namespace
      * \endcode
      */
     CommandHelpFormater & description( boost::string_ref text_r )
-    { _mww.gotoNextPar(); _mww.writePar( text_r ); return *this; }
+    { _mww.gotoNextPar(); return multiLineText(text_r.to_string()); }
     /** \overload const char * text */
     CommandHelpFormater & description( const char * text_r )
     { return description( boost::string_ref(text_r) ); }
@@ -572,6 +580,22 @@ namespace
     CommandHelpFormater & description( const str::Format & text_r )
     { return description( boost::string_ref(text_r.str()) ); }
 
+    /** Extra section title
+     * \code
+     * ""
+     * "  <text_r:>"
+     * ""
+     * \endcode
+     */
+    CommandHelpFormater & extraSection( boost::string_ref text_r )
+    { _mww.gotoNextPar(); _mww.writePar( text_r, 2 ); _mww.gotoNextPar(); return *this; }
+
+    CommandHelpFormater & examplesSection()
+    { return optionSection(_("Examples:") ); }
+
+    CommandHelpFormater & argumentsSection()
+    { return optionSection(_("Arguments:") ); }
+
     /** Option section title
      * \code
      * ""
@@ -580,7 +604,7 @@ namespace
      * \endcode
      */
     CommandHelpFormater & optionSection( boost::string_ref text_r )
-    { _mww.gotoNextPar(); _mww.writePar( text_r, 2 ); _mww.gotoNextPar(); return *this; }
+    { return extraSection(text_r); }
 
     CommandHelpFormater & optionSectionCommandOptions()
     { return optionSection(_("Command options:") ); }
@@ -850,10 +874,10 @@ void print_main_help( Zypper & zypper )
      "\t\t\t\tby installed packages.\n"
    );
 
-  static std::string help_locale_commands = _("     Language Support:\n"
-    "\tlist-language-support, langs\tList languages codes (locales). \n"
-    "\tadd-language-support, alangs\tAdd languages(s) to supported languages.\n"
-    "\tremove-language-support, rlangs\tRemove language(s) from supported languages.\n"
+  static std::string help_locale_commands = _("     Locale Management:\n"
+    "\tlocales, lloc\tList requested locales (languages codes). \n"
+    "\tadd-locale, aloc\tAdd locale(s) to requested locales.\n"
+    "\tremove-locale, rloc\tRemove locale(s) from requested locales.\n"
    );
 
   static std::string help_update_commands = _("     Update Management:\n"
@@ -3623,7 +3647,7 @@ void Zypper::processCommandOptions()
     break;
   }
 
-  case ZypperCommand::LIST_LANG_SUPPORT_e:
+  case ZypperCommand::LOCALES_e:
   {
     static struct option options[] =
     {
@@ -3633,34 +3657,33 @@ void Zypper::processCommandOptions()
       {0, 0, 0, 0}
     };
     specific_options = options;
-    _command_help = str::form( _(
-      "list-language-support (langs) [options] [LOCALE] ...\n"
-      "\n"
-      "List language codes (locales) and corresponding packages.\n"
-      "\n"
-      "Called without arguments, lists the languages which are supported. If the\n"
-      "language packages for a supported language are not yet on the system, they can\n"
-      "be installed by calling '%s'.\n"
-      "\n"
-      "  Command options:\n"
-      "-a, --all                List all available locales.\n"
-      "-p, --packages           Show corresponding packages.\n"
-      "\n"
-      "  Arguments:\n"
-      "The locale(s) for which the information shall be printed.\n"
-      "\n"
-      "  Example:\n"
-      "Get the list of packages which are available for 'de' and 'en'.\n"
-      "'%s'\n"
-      "\n"
-      "  Files:\n"
-      "%s\n"), "zypper add-language-support --packages <LOCALE>",
-      "zypper langs --packages de en", "/var/lib/zypp/RequestedLocales" );
 
+    _command_help = CommandHelpFormater()
+        .synopsis(
+          _("locales (lloc) [options] [LOCALE] ...") // translators: command synopsis; do not translate lowercase words
+         ).description(
+          str::form(
+            _(
+            "List requested locales and corresponding packages.\n"
+            "\n"
+            "Called without arguments, lists the requested locales. If the\n"
+            "locale packages for a requested language are not yet on the system, they can\n"
+            "be installed by calling '%s'.\n") , "zypper add-language-support --packages <LOCALE>" )
+        ).optionSectionCommandOptions()
+        .option("-a, --all", _("List all available locales."))
+        .option("-p, --packages", _("Show corresponding packages."))
+        .argumentsSection()
+        .multiLineText(
+          _("The locale(s) for which the information shall be printed.")
+        )
+        .examplesSection()
+        .multiLineText(
+          "zypper langs --packages de en"
+        );
     break;
   }
 
-  case ZypperCommand::ADD_LANG_SUPPORT_e:
+  case ZypperCommand::ADD_LOCALE_e:
   {
     static struct option options[] =
     {
@@ -3669,27 +3692,24 @@ void Zypper::processCommandOptions()
       {0, 0, 0, 0}
     };
     specific_options = options;
-    _command_help = str::form( _(
-      "add-language-support (alangs) [options] <LOCALE> ...\n"
-      "\n"
-      "Add given locale(s) to the list of supported languages.\n"
-      "\n"
-      "  Command options:\n"
-      "-p, --packages         Install corresponding packages for given locale(s).\n"
-      "                       NOT yet available\n"
-      "\n"
-      "  Arguments:\n"
-      "Specify languages which shall be supported by the locale (the language code).\n"
-      "Get a list of all available locales by calling '%s'.\n"
-      "\n"
-      "  Files:\n"
-      "%s\n"
-      "\n" ), "zypper langs --all", "/var/lib/zypp/RequestedLocales" );
-
+    _command_help = CommandHelpFormater()
+       .synopsis(
+         _( "addlocale (aloc) [options] <LOCALE> ..." ) // translators: command synopsis; do not translate lowercase words
+       ).description(
+         _( "Add given locale(s) to the list of requested locales." )
+       ).optionSectionCommandOptions()
+       .option( "-p, --packages", _("Install corresponding packages for given locale(s).") )
+       .argumentsSection()
+       .multiLineText(
+         str::form(
+           _("Specify locale which shall be supported by the language code.\n"
+           "Get a list of all available locales by calling '%s'."), "zypper langs --all"
+         )
+       );
     break;
   }
 
-  case ZypperCommand::REMOVE_LANG_SUPPORT_e:
+  case ZypperCommand::REMOVE_LOCALE_e:
   {
     static struct option options[] =
     {
@@ -3698,22 +3718,21 @@ void Zypper::processCommandOptions()
       {0, 0, 0, 0}
     };
     specific_options = options;
-    _command_help = str::form( _(
-      "remove-language-support (rlangs) [options] <LOCALE> ...\n"
-      "\n"
-      "Remove given locale(s) from the list of supported languages.\n"
-      "\n"
-      "  Command options:\n"
-      "-p, --packages         Remove corresponding packages for given locale(s).\n"
-      "                       NOT yet available\n"
-      "\n"
-      "  Arguments:\n"
-      "Specify languages which shall be removed by the locale (the language code).\n"
-      "Get the list of supported locales by calling '%s'.\n"
-      "\n"
-      "  Files:\n"
-      "%s\n"
-      "\n" ), "zypper langs", "/var/lib/zypp/RequestedLocales" );
+
+    _command_help = CommandHelpFormater()
+       .synopsis(
+         _( "remove-locale (rloc) [options] <LOCALE> ..." ) // translators: command synopsis; do not translate lowercase words
+       ).description(
+         _( "Remove given locale(s) from the list of supported languages." )
+       ).optionSectionCommandOptions()
+       .option( "-p, --packages", _("Remove corresponding packages for given locale(s).") )
+       .argumentsSection()
+       .multiLineText(
+         str::form(
+           _("Specify locales which shall be removed by the the language code.\n"
+             "Get the list of requested locales by calling '%s'."), "zypper langs"
+         )
+       );
     break;
   }
 
@@ -5847,7 +5866,7 @@ void Zypper::doCommand()
     break;
   }
 
-  case ZypperCommand::LIST_LANG_SUPPORT_e:
+  case ZypperCommand::LOCALES_e:
   {
     // TODO: supported -> without repo init because only the system is relevant
 
@@ -5864,8 +5883,6 @@ void Zypper::doCommand()
 
     if ( copts.count("packages") )
     {
-      // needed to compute status of packages
-      resolve(*this);
       localePackages( *this, _arguments, showAll );
     }
     else
@@ -5876,7 +5893,7 @@ void Zypper::doCommand()
     break;
   }
 
-  case ZypperCommand::ADD_LANG_SUPPORT_e:
+  case ZypperCommand::ADD_LOCALE_e:
   {
     if ( _arguments.empty() )
     {
@@ -5892,22 +5909,11 @@ void Zypper::doCommand()
 
     // load metadata
     load_resolvables(*this);
-
-    if ( copts.count("packages") )
-    {
-      addLocalePackages( *this, _arguments );
-    }
-    else
-    {
-      addLocales( *this, _arguments );
-    }
-
-    God->commit( ZYppCommitPolicy() );
-     
+    addLocales( *this, _arguments );
     break;
   }
 
-  case ZypperCommand::REMOVE_LANG_SUPPORT_e:
+  case ZypperCommand::REMOVE_LOCALE_e:
   {
     if ( _arguments.empty() )
     {
@@ -5919,18 +5925,7 @@ void Zypper::doCommand()
     init_target(*this);
     // load metadata
     load_resolvables(*this);
-
-    if ( copts.count("packages") )
-    {
-      removeLocalePackages( *this, _arguments );
-    }
-    else
-    {
-      removeLocales( *this, _arguments );
-    }
-
-    God->commit( ZYppCommitPolicy() );
-    
+    removeLocales( *this, _arguments );
     break;
   }
 

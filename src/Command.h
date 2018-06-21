@@ -94,9 +94,9 @@ struct ZypperCommand
   static const ZypperCommand RUG_PING;
   //!@}
 
-  static const ZypperCommand LIST_LANG_SUPPORT;
-  static const ZypperCommand ADD_LANG_SUPPORT;
-  static const ZypperCommand REMOVE_LANG_SUPPORT;
+  static const ZypperCommand LOCALES;
+  static const ZypperCommand ADD_LOCALE;
+  static const ZypperCommand REMOVE_LOCALE;
 
   enum Command
   {
@@ -173,9 +173,9 @@ struct ZypperCommand
     RUG_PATCH_SEARCH_e,
     RUG_PING_e,
 
-    LIST_LANG_SUPPORT_e,
-    ADD_LANG_SUPPORT_e,
-    REMOVE_LANG_SUPPORT_e
+    LOCALES_e,
+    ADD_LOCALE_e,
+    REMOVE_LOCALE_e
   };
 
   ZypperCommand( Command command ) : _command(command) {}

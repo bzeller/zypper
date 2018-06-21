@@ -73,5 +73,10 @@ bool resolve(Zypper & zypper);
  */
 void solve_and_commit(Zypper & zypper);
 
+/**
+ * Sets the default solver flags
+ */
+void set_solver_flags( Zypper & zypper_r );
+
 
 #endif /*SOLVE_COMMIT_H_*/

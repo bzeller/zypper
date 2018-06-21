@@ -28,12 +28,6 @@
 #include "locales.h"
 #include "solve-commit.h"
 
-using namespace std;
-using namespace boost;
-using namespace zypp;
-
-
-
 static std::string isRequestedLocale( zypp::Locale lang )
 {
     if ( God->pool().isRequestedLocale( lang ) )
@@ -52,8 +46,8 @@ static void printLocaleList( Zypper & zypper, const zypp::LocaleSet &locales )
   th << _("Code");
   // translators: header of table column - the language, e.g. English (United States)
   th << _("Language");
-  // translators: header of table column - is the language supported? (Yes/No)
-  th << _("Supported");
+  // translators: header of table column - is the language requested? (Yes/No)
+  th << _("Requested");
 
   tbl << th;
 
@@ -111,7 +105,7 @@ static void printLocalePackages( Zypper & zypper, const zypp::sat::LocaleSupport
   cout << tbl;
 }
 
-static zypp::LocaleSet relevantLocales( vector<string> localeArgs, bool glob )
+static zypp::LocaleSet relevantLocales( const std::vector<std::string> &localeArgs, bool glob )
 {
   const zypp::LocaleSet & availableLocales( God->pool().getAvailableLocales() );
 
@@ -134,7 +128,7 @@ static zypp::LocaleSet relevantLocales( vector<string> localeArgs, bool glob )
       {
         if ( glob )
         {
-          string reg = str::form( "^%s.*", (*loc).c_str() );
+          std::string reg = str::form( "^%s.*", (*loc).c_str() );
           if ( str::regex_match( (*it).code().c_str(), reg) )
           {
             resultSet.insert(*it);
@@ -151,7 +145,7 @@ static zypp::LocaleSet relevantLocales( vector<string> localeArgs, bool glob )
   return resultSet;
 }
 
-void listLocales( Zypper & zypper, vector<string> localeArgs, bool showAll )
+void listLocales( Zypper & zypper, const std::vector<std::string> &localeArgs, bool showAll )
 {
   zypp::LocaleSet locales;
 
@@ -167,7 +161,7 @@ void listLocales( Zypper & zypper, vector<string> localeArgs, bool showAll )
     printLocaleList( zypper, locales );
 }
 
-void localePackages( Zypper &zypper, vector<string> localeArgs, bool showAll )
+void localePackages( Zypper &zypper, const std::vector<std::string> &localeArgs, bool showAll )
 {
    zypp::LocaleSet locales;
 
@@ -187,81 +181,53 @@ void localePackages( Zypper &zypper, vector<string> localeArgs, bool showAll )
   }
 }
 
-map<string, bool> addLocales( Zypper &zypper, vector<string> localeArgs )
+void addLocales( Zypper &zypper, const std::vector<std::string> &localeArgs_r )
 {
-  map<string, bool> result;
-  
-  const zypp::LocaleSet & locales = relevantLocales( localeArgs, false );
+  const zypp::LocaleSet locales = relevantLocales( localeArgs_r, false );
 
-  for_( it, locales.begin(), locales.end() )
-  {
+  for_( it, locales.begin(), locales.end() ) {
     bool success = false;
 
-    if ( !God->pool().isRequestedLocale(*it) )
-    {
+    if ( !God->pool().isRequestedLocale(*it) ) {
       success = God->pool().addRequestedLocale( *it );
-      if ( success )
-      {
-        zypper.out().info( str::form( _("Added language code: %s"), (*it).code().c_str() ) );
-        result[(*it).code().c_str()] = true;
-      }
-      else
-      {
+      if ( success ) {
+        zypper.out().info( str::form( _("Added locale: %s"), (*it).code().c_str() ) );
+      } else {
         zypper.out().error( str::form( _("ERROR: cannot add %s"), (*it).code().c_str() ) );
-        result[(*it).code().c_str()] = false;
       }
-    }
-    else
-    {
-      zypper.out().info( str::form( _(" %s is already supported."), (*it).code().c_str() ) );
-      result[(*it).code().c_str()] = false;
+    } else {
+      zypper.out().info( str::form( _(" %s is already requested."), (*it).code().c_str() ) );
     }
   }
-  // commit is called in Zypper.cc
 
-  return result;
+  if ( copts.count("packages") ) {
+    solve_and_commit( zypper );
+  } else {
+    God->commit( ZYppCommitPolicy() );
+  }
 }
 
-void addLocalePackages( Zypper &zypper, vector<string> localeArgs )
+void removeLocales( Zypper &zypper, const std::vector<std::string> &localeArgs )
 {
-  cout << _("Not yet supported") << endl;
-}
-
-map<string, bool> removeLocales( Zypper &zypper, vector<string> localeArgs )
-{
-  map<string, bool> result;
-  
-  for_( it, localeArgs.begin(), localeArgs.end() )
-  {
+  for_( it, localeArgs.begin(), localeArgs.end() ) {
     bool success = false;
 
     zypp::Locale loc( *it );
-    if ( God->pool().isRequestedLocale( loc ) )
-    {
+    if ( God->pool().isRequestedLocale( loc ) ) {
       success = God->pool().eraseRequestedLocale( loc );
-      if ( success )
-      {
-        zypper.out().info( str::form( _("Removed language code: %s"), (*it).c_str() ) );
-        result[(*it)] = true;
-      }
-      else
-      {
+      if ( success ) {
+        zypper.out().info( str::form( _("Removed locale: %s"), (*it).c_str() ) );
+      } else {
         zypper.out().error( str::form( _("ERROR: cannot remove %s"), (*it).c_str() ) ) ;
-        result[(*it)] = false;
       }
-    }
-    else
-    {
-      zypper.out().info( str::form( _("%s was not supported."), (*it).c_str() ) );
-      result[(*it)] = false;
+    } else {
+      zypper.out().info( str::form( _("%s was not requested."), (*it).c_str() ) );
     }
   }
-  // commit is called in Zypper.cc
 
-  return result;
-}
-
-void removeLocalePackages( Zypper &zypper, vector<string> localeArgs )
-{
-  cout << _("Not yet supported") << endl;
+  if ( copts.count("packages") ) {
+    solve_and_commit( zypper );
+  } else {
+    God->commit( ZYppCommitPolicy() );
+  }
 }

@@ -293,21 +293,21 @@ static void set_ignore_recommends_of_installed(Zypper & zypper)
 }
 
 
-static void set_solver_flags( Zypper & zypper )
+void set_solver_flags(Zypper & zypper_r )
 {
-  set_force_resolution( zypper );
-  set_clean_deps( zypper );
-  set_no_recommends( zypper );
-  set_ignore_recommends_of_installed( zypper );
+  set_force_resolution( zypper_r );
+  set_clean_deps( zypper_r );
+  set_no_recommends( zypper_r );
+  set_ignore_recommends_of_installed( zypper_r );
 
   // Beware: While zypper calls resolve() once just to compute the PPP status,
   // solve_with_update must be false until the command passed the initialization!
-  God->resolver()->setUpdateMode( zypper.runtimeData().solve_with_update );
+  God->resolver()->setUpdateMode( zypper_r.runtimeData().solve_with_update );
 
   // Use resolver->dupSet... if ZypperCommand::DIST_UPGRADE
-  if ( shared_ptr<InstallerBaseOptions> installOptions = zypper.commandOptionsAs<InstallerBaseOptions>() )
+  if ( shared_ptr<InstallerBaseOptions> installOptions = zypper_r.commandOptionsAs<InstallerBaseOptions>() )
   {
-    if ( zypper.command() == ZypperCommand::DIST_UPGRADE )
+    if ( zypper_r.command() == ZypperCommand::DIST_UPGRADE )
     {
       if ( installOptions->_allowDowngrade != -1 ) God->resolver()->dupSetAllowDowngrade( installOptions->_allowDowngrade );
       if ( installOptions->_allowNameChange != -1 ) God->resolver()->dupSetAllowNameChange( installOptions->_allowNameChange );

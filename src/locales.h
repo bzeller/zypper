@@ -13,17 +13,13 @@
 
 extern ZYpp::Ptr God;
 
-void listLocales( Zypper & zypper, std::vector<std::string> localeArgs, bool showAll );
+void listLocales( Zypper & zypper, const std::vector<std::string> &localeArgs, bool showAll );
 
-void localePackages( Zypper & zypper, std::vector<std::string> localeArgs, bool showAll );
+void localePackages( Zypper & zypper, const std::vector<std::string> &localeArgs, bool showAll );
 
-std::map<std::string, bool> addLocales( Zypper & zypper, std::vector<std::string> localeArgs );
+void addLocales( Zypper & zypper_r, const std::vector<std::string> &localeArgs_r );
 
-void addLocalePackages( Zypper & zypper, std::vector<std::string> localeArgs );
-
-std::map<std::string, bool> removeLocales( Zypper & zypper, std::vector<std::string> localeArgs );
-
-void removeLocalePackages( Zypper & zypper, std::vector<std::string> localeArgs );
+void removeLocales( Zypper & zypper, const std::vector<std::string> &localeArgs );
 
 
 #endif
