@@ -3668,7 +3668,7 @@ void Zypper::processCommandOptions()
             "\n"
             "Called without arguments, lists the requested locales. If the\n"
             "locale packages for a requested language are not yet on the system, they can\n"
-            "be installed by calling '%s'.\n") , "zypper add-language-support --packages <LOCALE>" )
+            "be installed by calling '%s'.\n") , "zypper aloc <LOCALE>" )
         ).optionSectionCommandOptions()
         .option("-a, --all", _("List all available locales."))
         .option("-p, --packages", _("Show corresponding packages."))
@@ -3678,7 +3678,7 @@ void Zypper::processCommandOptions()
         )
         .examplesSection()
         .multiLineText(
-          "zypper langs --packages de en"
+          "zypper locales --packages de en"
         );
     break;
   }
@@ -3688,7 +3688,7 @@ void Zypper::processCommandOptions()
     static struct option options[] =
     {
       {"help", no_argument, 0, 'h'},
-      {"packages", no_argument, 0, 'p'},
+      {"no-packages", no_argument, 0, 'n'},
       {0, 0, 0, 0}
     };
     specific_options = options;
@@ -3698,12 +3698,12 @@ void Zypper::processCommandOptions()
        ).description(
          _( "Add given locale(s) to the list of requested locales." )
        ).optionSectionCommandOptions()
-       .option( "-p, --packages", _("Install corresponding packages for given locale(s).") )
+       .option( "-n, --no-packages", _("Do not install corresponding packages for given locale(s).") )
        .argumentsSection()
        .multiLineText(
          str::form(
            _("Specify locale which shall be supported by the language code.\n"
-           "Get a list of all available locales by calling '%s'."), "zypper langs --all"
+           "Get a list of all available locales by calling '%s'."), "zypper locales --all"
          )
        );
     break;
@@ -3714,7 +3714,7 @@ void Zypper::processCommandOptions()
     static struct option options[] =
     {
       {"help", no_argument, 0, 'h'},
-      {"packages", no_argument, 0, 'p'},
+      {"no-packages", no_argument, 0, 'n'},
       {0, 0, 0, 0}
     };
     specific_options = options;
@@ -3725,12 +3725,12 @@ void Zypper::processCommandOptions()
        ).description(
          _( "Remove given locale(s) from the list of supported languages." )
        ).optionSectionCommandOptions()
-       .option( "-p, --packages", _("Remove corresponding packages for given locale(s).") )
+       .option( "-n, --no-packages", _("Remove corresponding packages for given locale(s).") )
        .argumentsSection()
        .multiLineText(
          str::form(
            _("Specify locales which shall be removed by the the language code.\n"
-             "Get the list of requested locales by calling '%s'."), "zypper langs"
+             "Get the list of requested locales by calling '%s'."), "zypper locales"
          )
        );
     break;
@@ -5895,12 +5895,14 @@ void Zypper::doCommand()
 
   case ZypperCommand::ADD_LOCALE_e:
   {
+#if 0
     if ( _arguments.empty() )
     {
       report_required_arg_missing(out(), _command_help);
       setExitCode(ZYPPER_EXIT_ERR_INVALID_ARGS);
       return;
     }
+#endif
     // prepare target (system/installed)
     init_target(*this);
     // init repos

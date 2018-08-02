@@ -1457,16 +1457,16 @@ These commands give information about requested locales and the possibilty to ma
  Add specified locale(s) to the list of requested locales..
 +
 --
- *-p*, *--packages*::
- Install corresponding packages.
+ *-n*, *--no-packages*::
+ Do not install corresponding packages.
 --
 
 *remove-locale* (*rloc*) [options] <LOCALE> ...::
  Remove specified locale(s) from the list of requested locales..
 +
 --
- *-p*, *--packages*::
- Remove corresponding packages.
+ *-n*, *--no-packages*::
+ Do not remove corresponding packages.
 --
 
 Examples: :: {nop}

@@ -200,11 +200,10 @@ void addLocales( Zypper &zypper, const std::vector<std::string> &localeArgs_r )
     }
   }
 
-  if ( copts.count("packages") ) {
+  if ( copts.count("no-packages") )
+     God->commit( ZYppCommitPolicy() );
+  else
     solve_and_commit( zypper );
-  } else {
-    God->commit( ZYppCommitPolicy() );
-  }
 }
 
 void removeLocales( Zypper &zypper, const std::vector<std::string> &localeArgs )
@@ -225,9 +224,8 @@ void removeLocales( Zypper &zypper, const std::vector<std::string> &localeArgs )
     }
   }
 
-  if ( copts.count("packages") ) {
-    solve_and_commit( zypper );
-  } else {
+  if ( copts.count("no-packages") )
     God->commit( ZYppCommitPolicy() );
-  }
+  else
+    solve_and_commit( zypper );
 }
