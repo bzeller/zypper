@@ -2,6 +2,7 @@
 
 #include <boost/optional.hpp>
 #include "utils/flags/flagtypes.h"
+#include "utils/messages.h"
 #include "commandhelpformatter.h"
 #include "solve-commit.h"
 
@@ -169,14 +170,41 @@ int ZypperBaseCommand::run(Zypper &zypp, const std::vector<std::string> &positio
 
     return execute( zypp, positionalArgs );
   }
+
+  // ZypperBaseCommand's should actually handle all exceptions themselfes, however
+  // for compatibility reasons we better catch those here again
+  //
+  // TODO Someday redesign the Exceptions flow.
   catch ( const Out::Error & error_r )
   {
     error_r.report( zypp );
     return error_r._exitcode;
   }
+  catch ( const AbortRequestException & ex )
+  {
+    ZYPP_CAUGHT( ex );
+    zypp.out().error( ex.asUserString() );
+  }
+  catch ( const ExitRequestException & ex )
+  {
+    ZYPP_CAUGHT( ex );
+    WAR << "Caught exit request: exitCode " << zypp.exitCode() << endl;
+  }
+  catch ( const Exception & ex )
+  {
+    ZYPP_CAUGHT( ex );
+    {
+      SCOPED_VERBOSITY( zypp.out(), Out::DEBUG );
+      zypp.out().error( ex, _("Unexpected exception.") );
+    }
+    report_a_bug( zypp.out() );
+    if ( ! zypp.exitCode() )
+      zypp.setExitCode( ZYPPER_EXIT_ERR_BUG );
+  }
 
-  //@TODO report bug
-  return 0;
+  //if we reach this place we catched a execption the command should've handled,
+  //lets hope it did actually set the exit code
+  return zypp.exitCode();
 }
 
 std::string ZypperBaseCommand::help()
