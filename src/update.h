@@ -1,13 +1,16 @@
 #include <zypp/PoolItem.h>
 
 #include "Zypper.h"
+#include "issue.h"
 
 #include "utils/misc.h"
+#include "SolverRequester.h"
+
 
 /**
  * Are there applicable patches?
  */
-void patch_check();
+void patch_check(bool updatestackOnly);
 
 /**
  * Lists available updates of installed resolvables of specified \a kind.
@@ -32,4 +35,4 @@ void list_patches_by_issue(Zypper & zypper);
  * Mark patches for installation according to bugzilla or CVE number specified
  * in --cve or --bugzilla or --bz.
  */
-void mark_updates_by_issue(Zypper & zypper);
+void mark_updates_by_issue(Zypper & zypper, const std::set<Issue> &issues, SolverRequester::Options srOpts);

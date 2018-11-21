@@ -35,7 +35,34 @@ struct CliMatchPatch
   CliMatchPatch()
   {}
 
-  /** Ctor: Filter according to zypper CLI options */
+  CliMatchPatch( Zypper & zypper, const std::vector<Date> &dates_r, std::set<std::string> categories_r, std::set<std::string> severities_r )
+  {
+    for ( const auto & val : dates_r )
+    {
+      if ( val && ( !_dateBefore || val < _dateBefore ) )
+      {
+	_dateBefore = val;
+      }
+    }
+    _categories = std::move( categories_r );
+    for ( const std::string & cat : _categories )
+    {
+      if ( Patch::categoryEnum( cat ) == Patch::CAT_OTHER )
+      {
+        zypper.out().warning( str::Format(_("Suspicious category filter value '%1%'.")) % cat );
+      }
+    }
+    _severities = std::move ( severities_r );
+    for ( const std::string & sev : _severities )
+    {
+      if ( Patch::severityFlag( sev ) == Patch::SEV_OTHER )
+      {
+        zypper.out().warning( str::Format(_("Suspicious severity filter value '%1%'.")) % sev );
+      }
+    }
+  }
+
+  /** Ctor: Filter according to zypper CLI options remove with copts */
   CliMatchPatch( Zypper & zypper )
   {
     for ( const auto & val : zypper.cOptValues( "date" ) )
@@ -375,7 +402,7 @@ public:
    * If there are any needed patches flagged "affects package management", only
    * these get selected (need to call this again once these are installed).
    */
-  void updatePatches();
+  void updatePatches(bool updateStackOnly);
 
   /**
    * Set specified patch for installation.

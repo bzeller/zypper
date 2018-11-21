@@ -26,6 +26,9 @@
 #include "commands/sourceinstall.h"
 #include "commands/distupgrade.h"
 #include "commands/inrverify.h"
+#include "commands/patch.h"
+#include "commands/update.h"
+#include "commands/patchcheck.h"
 
 using namespace zypp;
 
@@ -50,6 +53,14 @@ namespace
     return std::make_shared<T> ( aliases_r );
   }
 
+  //Empty command object for NONE_e
+  template<>
+  ZypperBaseCommandPtr commandFactory<void> ( const std::vector<std::string> & )
+  {
+    ZYPP_THROW( ExitRequestException( str::form(_("Invalid command") ) ) );
+    return ZypperBaseCommandPtr();
+  }
+
   struct CommandFactory {
     std::vector<std::string> aliases;
     std::function<ZypperBaseCommandPtr ( const std::vector<std::string> & )> constructor;
@@ -60,13 +71,13 @@ namespace
     }
 
     template <typename T >
-    constexpr static CommandFactory make ( const std::vector<std::string> &aliases_r )
+    static CommandFactory make ( const std::vector<std::string> &aliases_r )
     {
       return CommandFactory { aliases_r, commandFactory<T> };
     }
 
     template < typename T, typename AliasType, AliasType t >
-    constexpr static CommandFactory makeAlias ( const std::vector<std::string> &aliases_r )
+    static CommandFactory makeAlias ( const std::vector<std::string> &aliases_r )
     {
       return CommandFactory { aliases_r, commandAliasFactory<T, AliasType, t> };
     }
@@ -77,6 +88,7 @@ namespace
   static std::map< ZypperCommand::Command, CommandFactory > &newStyleCommands ()
   {
     static std::map< ZypperCommand::Command,  CommandFactory> table {
+      { ZypperCommand::NONE_e,        CommandFactory::make<void>( { "none",       ""}) },
       { ZypperCommand::LIST_LOCKS_e,  CommandFactory::make<ListLocksCmd>( { "locks",       "ll", "lock-list"          }) },
       { ZypperCommand::ADD_LOCK_e,    CommandFactory::make<AddLocksCmd>({ "addlock",     "al", "lock-add",     "la" }) },
       { ZypperCommand::REMOVE_LOCK_e, CommandFactory::make<RemoveLocksCmd>({ "removelock",  "rl", "lock-delete" , "ld" }) },
@@ -118,7 +130,10 @@ namespace
       { ZypperCommand::SRC_INSTALL_e,      CommandFactory::make<SourceInstallCmd>( { "source-install", "si" } ) },
       { ZypperCommand::DIST_UPGRADE_e,     CommandFactory::make<DistUpgradeCmd>( { "dist-upgrade", "dup" } ) },
       { ZypperCommand::VERIFY_e,           CommandFactory::makeAlias<InrVerifyCmd, InrVerifyCmd::Mode, InrVerifyCmd::Mode::Verify>( { "verify", "ve" } ) },
-      { ZypperCommand::INSTALL_NEW_RECOMMENDS_e, CommandFactory::makeAlias<InrVerifyCmd, InrVerifyCmd::Mode, InrVerifyCmd::Mode::InstallRecommends>( { "install-new-recommends", "inr" } ) }
+      { ZypperCommand::INSTALL_NEW_RECOMMENDS_e, CommandFactory::makeAlias<InrVerifyCmd, InrVerifyCmd::Mode, InrVerifyCmd::Mode::InstallRecommends>( { "install-new-recommends", "inr" } ) },
+      { ZypperCommand::PATCH_e,            CommandFactory::make<PatchCmd> ( { "patch"  } ) },
+      { ZypperCommand::UPDATE_e,           CommandFactory::make<UpdateCmd> ( { "update", "up"  } ) },
+      { ZypperCommand::PATCH_CHECK_e,      CommandFactory::make<PatchCheckCmd> ( { "patch-check", "pchk"} ) }
     };
     return table;
   }
@@ -129,7 +144,7 @@ namespace
     if ( _table.empty() )
     {
 #define _t(C) _table( ZypperCommand::C )
-      _t( NONE_e )		| "NONE"		| "none" | "";
+      //_t( NONE_e )		| "NONE"		| "none" | "";
       _t( SUBCOMMAND_e)		| "subcommand";
 
       //_t( ADD_SERVICE_e )	| "addservice"		| "as" | "service-add" | "sa";
@@ -152,11 +167,11 @@ namespace
       //_t( VERIFY_e )		| "verify"		| "ve";
       //_t( INSTALL_NEW_RECOMMENDS_e )| "install-new-recommends" | "inr";
 
-      _t( UPDATE_e )		| "update"		| "up";
+      //_t( UPDATE_e )		| "update"		| "up";
       _t( LIST_UPDATES_e )	| "list-updates"	| "lu";
-      _t( PATCH_e )		| "patch";
+      //_t( PATCH_e )		| "patch";
       _t( LIST_PATCHES_e )	| "list-patches"	| "lp";
-      _t( PATCH_CHECK_e )	| "patch-check"		| "pchk";
+      //_t( PATCH_CHECK_e )	| "patch-check"		| "pchk";
       //_t( DIST_UPGRADE_e )	| "dist-upgrade"	| "dup";
 
       _t( SEARCH_e )		| "search"		| "se";
@@ -279,12 +294,7 @@ DEF_ZYPPER_COMMAND( NEEDS_REBOOTING );
 ///////////////////////////////////////////////////////////////////
 
 ZypperCommand::ZypperCommand(ZypperCommand::Command command) : _command(command)
-{
-  //set the command object if the passed enum represents a new style cmd
-  auto &newCmds = newStyleCommands();
-  if ( newCmds.find( _command ) != newCmds.end() ) {
-    _newStyleCmdObj = newCmds[_command]();
-  }
+{ 
 }
 
 ZypperCommand::ZypperCommand( const std::string & strval_r )
@@ -311,5 +321,12 @@ const std::string & ZypperCommand::asString() const
 
 ZypperBaseCommandPtr ZypperCommand::commandObject() const
 {
+  if ( !_newStyleCmdObj ) {
+    //set the command object if the passed enum represents a new style cmd
+    auto &newCmds = newStyleCommands();
+    if ( newCmds.find( _command ) != newCmds.end() ) {
+      _newStyleCmdObj = newCmds[_command]();
+    }
+  }
   return _newStyleCmdObj;
 }

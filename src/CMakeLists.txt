@@ -29,6 +29,7 @@ SET (zypper_HEADERS
   SolverRequester.h
   Summary.h
   global-settings.h
+  issue.h
   callbacks/keyring.h
   callbacks/media.h
   callbacks/rpm.h
@@ -80,6 +81,11 @@ SET (zypper_HEADERS
   commands/sourceinstall.h
   commands/distupgrade.h
   commands/inrverify.h
+  commands/commonupdateoptionset.h
+  commands/patch.h
+  commands/update.h
+  commands/commonflags.h
+  commands/patchcheck.h
 )
 
 SET( zypper_SRCS
@@ -100,6 +106,7 @@ SET( zypper_SRCS
   SolverRequester.cc
   Summary.cc
   global-settings.cc
+  issue.cc
   callbacks/media.cc
   commands/optionsets.cc
   commands/commandhelpformatter.cc
@@ -141,6 +148,10 @@ SET( zypper_SRCS
   commands/sourceinstall.cc
   commands/distupgrade.cc
   commands/inrverify.cc
+  commands/commonupdateoptionset.cc
+  commands/patch.cc
+  commands/update.cc
+  commands/patchcheck.cc
   ${zypper_HEADERS}
 )
 

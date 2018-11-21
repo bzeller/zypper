@@ -12,6 +12,7 @@
 #include <vector>
 #include <iostream>
 #include <exception>
+#include <initializer_list>
 
 #include <boost/optional.hpp>
 
@@ -140,6 +141,16 @@ namespace ZyppFlags {
      * Creates the command group with given options, conflicting flags and the custom \a name_r
      */
     CommandGroup (  std::string &&name_r, std::vector<CommandOption> &&options_r, ConflictingFlagsList &&conflictingOptions_r = ConflictingFlagsList() );
+
+    inline CommandGroup &operator<< ( CommandOption && opt ) {
+      options.push_back( std::move(opt) );
+      return *this;
+    }
+
+    inline CommandGroup &operator<< ( std::initializer_list<CommandOption> li ) {
+      options.insert( options.end(), li );
+      return *this;
+    }
 
     std::string name; //< The name of the command group
     std::vector<CommandOption> options; //< The flags the command group supports

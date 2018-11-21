@@ -23,27 +23,6 @@ extern ZYpp::Ptr God;
 static void find_updates( const ResKindSet & kinds, Candidates & candidates );
 
 ///////////////////////////////////////////////////////////////////
-/// \class Issues
-/// \brief An issue (Type,Id) pair
-///////////////////////////////////////////////////////////////////
-struct Issue : std::pair<std::string, std::string>
-{
-  Issue( std::string issueType_r, std::string issueId_r )
-  : std::pair<std::string, std::string>( std::move(issueType_r), std::move(issueId_r) )
-  {}
-
-  std::string &       type()			{ return first; }
-  const std::string & type()		const	{ return first; }
-  bool                anyType()		const	{ return type().empty(); }
-  bool                specificType()	const	{ return !anyType(); }
-
-  std::string &       id()			{ return second; }
-  const std::string & id()		const	{ return second; }
-  bool                anyId()		const 	{ return id().empty(); }
-  bool                specificId()	const	{ return !anyId(); }
-};
-
-///////////////////////////////////////////////////////////////////
 /// \class CliScanIssues
 /// \brief Setup issue (Type,Id) pairs from CLI
 ///////////////////////////////////////////////////////////////////
@@ -384,14 +363,13 @@ namespace
 } // namespace
 ///////////////////////////////////////////////////////////////////
 
-void patch_check()
+void patch_check( bool updatestackOnly )
 {
   Zypper & zypper( Zypper::instance() );
   Out & out( zypper.out() );
   DBG << "patch check" << endl;
 
   PatchCheckStats stats( zypper.globalOpts().exclude_optional_patches );
-  bool updatestackOnly = Zypper::instance().cOpts().count("updatestack-only");
   for_( it, God->pool().byKindBegin(ResKind::patch), God->pool().byKindEnd(ResKind::patch) )
   {
     const PoolItem & pi( *it );
@@ -991,16 +969,8 @@ void list_patches_by_issue( Zypper & zypper )
 
 // ----------------------------------------------------------------------------
 
-void mark_updates_by_issue( Zypper & zypper )
+void mark_updates_by_issue( Zypper & zypper, const std::set<Issue> &issues, SolverRequester::Options srOpts )
 {
-  CliScanIssues issues;
-
-  SolverRequester::Options srOpts;
-  srOpts.force = zypper.cOpts().count("force");
-  srOpts.skip_interactive = zypper.cOpts().count("skip-interactive");
-  srOpts.skip_optional_patches = zypper.globalOpts().exclude_optional_patches;
-  srOpts.cliMatchPatch = CliMatchPatch( zypper );
-
   for ( const Issue & issue : issues )
   {
     PoolQuery q;
